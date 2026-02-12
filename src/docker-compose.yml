@@ -1,0 +1,27 @@
+services:
+  backend:
+    build: ./backend
+    container_name: cs590-chat-backend
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "4003:4000" # Expose port 4000 of the container to port 4003 on the host
+    healthcheck:
+      # Note, this check is internal to the "network" Docker creates when composing
+      # these containers together, so it should always refer to localhost
+      # Requires curl installed in backend image
+      test: ["CMD", "curl", "-sf", "http://localhost:4000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  frontend:
+    build: ./frontend
+    container_name: cs590-chat-frontend
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "4083:80"
